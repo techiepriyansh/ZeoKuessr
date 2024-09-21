@@ -8,6 +8,7 @@ uint256 constant OP_CALC_POOL_PARTITION = 2; // calcPoolPartition(gameId uint256
 
 struct OffchainTx {
     uint256 id;
+    uint256 gameId;
     uint256 op;
     bytes[] args;
 }
@@ -46,16 +47,16 @@ contract ZeoKuessr {
     event GamePoolPartitioned(uint256 indexed gameId);
 
 
-    function callOffchain(uint256 op, bytes[] memory args) internal {
+    function callOffchain(uint256 gameId, uint256 op, bytes[] memory args) internal {
         uint256 txId = txIdEnd++;
-        OffchainTx memory offchainTx = OffchainTx(txId, op, args);
+        OffchainTx memory offchainTx = OffchainTx(txId, gameId, op, args);
         offchainTxs[txId] = offchainTx;
     }
 
     function getFirstPendingOffchainTx() external view returns (OffchainTx memory) {
         // TODO: access restricted to the ROFL
         if (txIdStart == txIdEnd) {
-            return OffchainTx(0, 0, new bytes[](0));
+            return OffchainTx(0, 0, 0, new bytes[](0));
         }
         return offchainTxs[txIdStart];
     }
@@ -66,7 +67,7 @@ contract ZeoKuessr {
         OffchainTx memory offchainTx = offchainTxs[txId];
         if (offchainTx.op == OP_GET_GEO_LOCATION_IMAGE) {
             // (imageId string)
-            emit GeoLocationImageResponse(txId, string(result[0]));
+            emit GeoLocationImageResponse(offchainTx.gameId, string(result[0]));
         } else if (offchainTx.op == OP_CALC_POOL_PARTITION) {
             // (gameId uint256, uint256[] partitionAmounts)
         }
@@ -80,20 +81,18 @@ contract ZeoKuessr {
     }
 
     function getRandGeoLocation(uint256 gameId, bytes memory locationSeed) internal {
-        bytes[] memory args = new bytes[](2);
-        args[0] = abi.encodePacked(gameId); 
-        args[1] = locationSeed;
-        callOffchain(OP_GET_GEO_LOCATION_IMAGE, args);
+        bytes[] memory args = new bytes[](1);
+        args[0] = locationSeed;
+        callOffchain(gameId, OP_GET_GEO_LOCATION_IMAGE, args);
     }
 
     function calcPoolPartition(uint256 gameId, bytes memory locationSeed, uint256 numUsers, bytes32[] memory userGuesses, uint256[] memory userAmounts) internal {
-        bytes[] memory args = new bytes[](3);
-        args[0] = abi.encodePacked(gameId);
-        args[1] = locationSeed;
-        args[2] = abi.encodePacked(numUsers);
-        args[3] = abi.encodePacked(userGuesses);
-        args[4] = abi.encodePacked(userAmounts);
-        callOffchain(OP_CALC_POOL_PARTITION, args);
+        bytes[] memory args = new bytes[](4);
+        args[0] = locationSeed;
+        args[1] = abi.encodePacked(numUsers);
+        args[2] = abi.encodePacked(userGuesses);
+        args[3] = abi.encodePacked(userAmounts);
+        callOffchain(gameId, OP_CALC_POOL_PARTITION, args);
     }
 
     function startGame(uint256 gameId) external {
