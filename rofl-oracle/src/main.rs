@@ -1,4 +1,6 @@
 use oasis_runtime_sdk::{crypto::signature::secp256k1::PublicKey, modules::rofl::app::prelude::*, types::address::SignatureAddressSpec};
+use ethers::prelude::*;
+use ethabi;
 /// Address where the oracle contract is deployed.
 // #region oracle-contract-address
 const ORACLE_CONTRACT_ADDRESS: &str = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // TODO: Replace with your contract address.
@@ -113,6 +115,25 @@ impl OracleApp {
 
         // // Submit observation on chain.env
         // env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        let sdk_pub_key = PublicKey::from_bytes(env.signer().public_key().as_bytes()).unwrap();
+        let res = env.client().query(
+            0,
+            "evm.SimulateCall",
+            module_evm::types::SimulateCallQuery {
+                gas_price: 10.into(),
+                gas_limit: 100_000,
+                caller: module_evm::derive_caller::from_sigspec(&SignatureAddressSpec::Secp256k1Eth(sdk_pub_key)).unwrap(),
+                address: None,
+                value: 0.into(),
+                data: [
+                  ethabi::short_signature("getFirstPendingOffchainTx", &[]).to_vec(),
+                  ethabi::encode(&[]),
+                ].concat(),
+            },
+        ).await?;
+
+        println!("ENGINIGGER PULL");
 
         Ok(())
     }
