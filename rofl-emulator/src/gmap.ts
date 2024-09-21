@@ -12,6 +12,11 @@ export const generateCoordinatesFromLocationSeed = (seed: string) => {
     return { latitude, longitude };
 }
 
+export const getDistanceBwLocationSeeds = (seed1: string, seed2: string) => {
+    const c1 = generateCoordinatesFromLocationSeed(seed1);
+    const c2 = generateCoordinatesFromLocationSeed(seed2);
+}
+
 async function fetchStreetViewImage(lat: number, lng: number): Promise<string> {
     const url = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${lat},${lng}&key=${API_KEY}`;
     try {

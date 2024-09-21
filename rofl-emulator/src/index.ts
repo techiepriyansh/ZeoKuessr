@@ -54,16 +54,12 @@ const mainLoop = async () => {
 
             const locationSeed = offchainTx.args[0];
             const numUsers = parseInt(offchainTx.args[1], 16);
-            
-            const userGuesses = [];
-            for (let i = 0; i < numUsers; i++) {
-                userGuesses.push(offchainTx.args[2].slice(i * 32, (i + 1) * 32));
-            }
 
-            const userAmounts = [];
+            const userWeights = [];
+
             for (let i = 0; i < numUsers; i++) {
-                const amt = parseInt(offchainTx.args[3].slice(i * 32, (i + 1) * 32), 16);
-                userAmounts.push(amt);
+                const userGuess = offchainTx.args[2].slice(i * 32, (i + 1) * 32);
+                const userAmount = parseInt(offchainTx.args[3].slice(i * 32, (i + 1) * 32), 16);
             }
         }
         default: {
