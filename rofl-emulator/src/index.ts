@@ -35,7 +35,8 @@ async function main() {
                 break;
             }
             case OP_GET_GEO_LOCATION_IMAGE: {
-                const locationSeed = offchainTx.args[0];
+                console.log(offchainTx.args[0]);
+                const locationSeed = offchainTx.args[1];
                 const imageBase64 = await gmapMain(locationSeed);
                 const imageId = await signMain(imageBase64);
                 console.log(`[INFO] Image ID: ${imageId}`);

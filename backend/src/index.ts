@@ -1,3 +1,3 @@
 export {
-    MessageBox, MessageBox__factory,
+    ZeoKuessr, ZeoKuessr__factory,
 } from "../typechain-types"

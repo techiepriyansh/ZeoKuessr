@@ -44,11 +44,11 @@ task('deploy')
 
     // For deployment unwrap the provider to enable contract verification.
     const uwProvider = new JsonRpcProvider(hre.network.config.url);
-    const MessageBox = await hre.ethers.getContractFactory('MessageBox', new hre.ethers.Wallet(accounts[0], uwProvider));
-    const messageBox = await MessageBox.deploy();
+    const ZeoKuessr = await hre.ethers.getContractFactory('ZeoKuessr', new hre.ethers.Wallet(accounts[0], uwProvider));
+    const messageBox = await ZeoKuessr.deploy();
     await messageBox.waitForDeployment();
 
-    console.log(`MessageBox address: ${await messageBox.getAddress()}`);
+    console.log(`ZeoKuessr address: ${await messageBox.getAddress()}`);
     return messageBox;
 });
 
@@ -57,7 +57,7 @@ task('newGame')
   .setAction(async (args, hre) => {
     await hre.run('compile');
 
-    let messageBox = await hre.ethers.getContractAt('MessageBox', args.address);
+    let messageBox = await hre.ethers.getContractAt('ZeoKuessr', args.address);
     const tx = await messageBox.newGame();
     const receipt = await tx.wait();
     console.log(receipt);
@@ -69,19 +69,19 @@ task('startGame')
   .setAction(async (args, hre) => {
     await hre.run('compile');
 
-    let messageBox = await hre.ethers.getContractAt('MessageBox', args.address);
+    let messageBox = await hre.ethers.getContractAt('ZeoKuessr', args.address);
     const tx = await messageBox.startGame(args.gameId);
     const receipt = await tx.wait();
     console.log(receipt);
   });
 
-// Read message from the MessageBox.
+// Read message from the ZeoKuessr.
 // task('message')
 //   .addPositionalParam('address', 'contract address')
 //   .setAction(async (args, hre) => {
 //     await hre.run('compile');
 
-//     const messageBox = await hre.ethers.getContractAt('MessageBox', args.address);
+//     const messageBox = await hre.ethers.getContractAt('ZeoKuessr', args.address);
 //     const message = await messageBox.message();
 //     const author = await messageBox.author();
 //     console.log(`The message is: ${message}, author: ${author}`);
@@ -94,7 +94,7 @@ task('startGame')
 //   .setAction(async (args, hre) => {
 //     await hre.run('compile');
 
-//     let messageBox = await hre.ethers.getContractAt('MessageBox', args.address);
+//     let messageBox = await hre.ethers.getContractAt('ZeoKuessr', args.address);
 //     const tx = await messageBox.setMessage(args.message);
 //     const receipt = await tx.wait();
 //     console.log(`Success! Transaction hash: ${receipt!.hash}`);

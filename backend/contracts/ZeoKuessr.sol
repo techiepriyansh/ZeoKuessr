@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 
 uint256 constant OP_GET_GEO_LOCATION_IMAGE = 1; // getGeoLocationImage(locationSeed bytes)
-uint256 constant OP_CALC_POOL_PARTITION = 2; // calcPoolPartition(gameId uint256, poolAmount uint256, locationSeed bytes, numUser uint256, userGuesses bytes[])
+uint256 constant OP_CALC_POOL_PARTITION = 2; // calcPoolPartition(gameId uint256, locationSeed bytes, numUser uint256, userGuesses bytes32[], userAmounts uint256[])
 
 struct OffchainTx {
     uint256 id;
@@ -23,13 +23,13 @@ struct GameState {
     uint256 poolAmount;
     uint256 numUsers;
     address[] userAddresses;
-    string[] userGuesses;
+    bytes32[] userGuesses;
     uint256[] userAmounts;
     bool isEnded;
     bool isResolved;
 }
 
-contract ZeoKuesser {
+contract ZeoKuessr {
     mapping(uint256 => GameState) private gameStates;
     uint256 private gameIdEnd = 1;
 
@@ -39,16 +39,17 @@ contract ZeoKuesser {
     uint256 private txIdEnd = 1;
 
     event NewGameCreated(uint256 indexed gameId);
-
-    event GeoLocationImageRequest(uint256 indexed gameId, uint256 txId);
-    event GeoLocationImageResponse(uint256 indexed txId, string imageId);
+    event GameStarted(uint256 indexed gameId);
     event GameEnded(uint256 indexed gameId);
 
-    function callOffchain(uint256 op, bytes[] memory args) internal returns (uint256) {
+    event GeoLocationImageResponse(uint256 indexed gameId, string imageId);
+    event GamePoolPartitioned(uint256 indexed gameId);
+
+
+    function callOffchain(uint256 op, bytes[] memory args) internal {
         uint256 txId = txIdEnd++;
         OffchainTx memory offchainTx = OffchainTx(txId, op, args);
         offchainTxs[txId] = offchainTx;
-        return txId;
     }
 
     function getFirstPendingOffchainTx() external view returns (OffchainTx memory) {
@@ -78,10 +79,21 @@ contract ZeoKuesser {
         return seed;
     }
 
-    function getRandGeoLocation(bytes memory locationSeed) internal returns (uint256) {
-        bytes[] memory args = new bytes[](1);
-        args[0] = locationSeed;
-        return callOffchain(OP_GET_GEO_LOCATION_IMAGE, args);
+    function getRandGeoLocation(uint256 gameId, bytes memory locationSeed) internal {
+        bytes[] memory args = new bytes[](2);
+        args[0] = abi.encodePacked(gameId); 
+        args[1] = locationSeed;
+        callOffchain(OP_GET_GEO_LOCATION_IMAGE, args);
+    }
+
+    function calcPoolPartition(uint256 gameId, bytes memory locationSeed, uint256 numUsers, bytes32[] memory userGuesses, uint256[] memory userAmounts) internal {
+        bytes[] memory args = new bytes[](3);
+        args[0] = abi.encodePacked(gameId);
+        args[1] = locationSeed;
+        args[2] = abi.encodePacked(numUsers);
+        args[3] = abi.encodePacked(userGuesses);
+        args[4] = abi.encodePacked(userAmounts);
+        callOffchain(OP_CALC_POOL_PARTITION, args);
     }
 
     function startGame(uint256 gameId) external {
@@ -89,8 +101,8 @@ contract ZeoKuesser {
         // update the state of the game using gameId
         bytes memory locationSeed = genRandLocationSeed();
         gameStates[gameId].locationSeed = locationSeed;
-        uint256 txId = getRandGeoLocation(locationSeed);
-        emit GeoLocationImageRequest(gameId, txId);
+        getRandGeoLocation(gameId, locationSeed);
+        emit GameStarted(gameId);
     }
 
     function newGame() external {
@@ -101,7 +113,7 @@ contract ZeoKuesser {
             0,
             0,
             new address[](0),
-            new string[](0),
+            new bytes32[](0), // lat long encoded as bytes32
             new uint256[](0),
             false,
             false
@@ -126,7 +138,7 @@ contract ZeoKuesser {
         return 99;
     }
 
-    function guess(uint256 gameId, string calldata userGuess) external payable {
+    function guess(uint256 gameId, bytes32 userGuess) external payable {
         uint256 userIndex = getUserIndex(gameId, msg.sender);
         gameStates[gameId].userGuesses[userIndex] = userGuess;
         gameStates[gameId].numUsers++;
@@ -137,6 +149,10 @@ contract ZeoKuesser {
     function endGame(uint256 gameId) external {
         require(gameStates[gameId].isEnded == false, "game already ended");
         require(getUserIndex(gameId, msg.sender) != 99, "not a player");
+
+        GameState memory game = gameStates[gameId];
+        calcPoolPartition(gameId, game.locationSeed, game.numUsers, game.userGuesses, game.userAmounts);
+
         gameStates[gameId].isEnded = true;
         gameStates[gameId].isResolved = false;
         emit GameEnded(gameId);
