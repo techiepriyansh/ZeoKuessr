@@ -72,19 +72,10 @@ export const Game = () => {
   };
 
   const generateLocationSeedFromCoordinates = (latitude: number, longitude: number) => {
-    const CENTER_LATITUDE = 48.86432706201461;
-    const CENTER_LONGITUDE = 2.347093922859318;
-    const RADIUS = 0.1;
-    const lat = ((latitude - CENTER_LATITUDE) / RADIUS) * 180;
-    const lon = ((longitude - CENTER_LONGITUDE) / RADIUS) * 360;
-
-    const latHex = BigInt(Math.round(((lat + 90) / 180) * 2 ** 64))
-      .toString(16)
-      .padStart(32, '0');
-    const lonHex = BigInt(Math.round(((lon + 180) / 360) * 2 ** 64))
-      .toString(16)
-      .padStart(32, '0');
-
+    console.log(latitude, longitude);
+    const latHex = Math.round(((latitude + 90) / 180) * (2 ** 64)).toString(16).padStart(32, '0');
+    const lonHex = Math.round(((longitude + 180) / 360) * (2 ** 64)).toString(16).padStart(32, '0');
+    console.log(latHex, lonHex);
     return '0x' + latHex + lonHex;
   };
 
@@ -96,7 +87,7 @@ export const Game = () => {
       coordinates.lat as number,
       coordinates.lng as number,
     );
-    const tx = await contract.guess(game, seed); 
+    const tx = await contract.guess(game, seed);
     await tx.wait();
   };
 
@@ -124,10 +115,7 @@ export const Game = () => {
             >
               {isJoined ? 'Start Game' : 'Join Game'}
             </button>
-            <button
-              onClick={endGame}
-              className="bg-red-500 text-white p-2 rounded mt-5"
-            >
+            <button onClick={endGame} className="bg-red-500 text-white p-2 rounded mt-5">
               End Game
             </button>
           </div>
