@@ -13,15 +13,13 @@ struct OffchainTx {
 }
 
 contract MessageBox {
-    string private _message;
-    address public author;
-
 	mapping(uint256 => OffchainTx) private offchainTxs;
 
 	uint256 private txIdStart = 1;
 	uint256 private txIdEnd = 1;
 
-	event GeoLocationImage(uint256 indexed txId, string imageId);
+	event GeoLocationImageRequest(uint256 indexed gameId, uint256 txId);
+	event GeoLocationImageResponse(uint256 indexed txId, string imageId);
 
 	function callOffchain(uint256 op, bytes[] memory args) internal returns (uint256) {
 		uint256 txId = txIdEnd++;
@@ -30,13 +28,9 @@ contract MessageBox {
 		return txId;
 	}
 
-	function getPendingOffchainTxs() external view returns (OffchainTx[] memory) {
+	function getFirstPendingOffchainTx() external view returns (OffchainTx memory) {
 		// TODO: access restricted to the ROFL
-		OffchainTx[] memory pendingOffchainTxs = new OffchainTx[](txIdEnd - txIdStart);
-		for (uint256 i = txIdStart; i < txIdEnd; i++) {
-			pendingOffchainTxs[i - txIdStart] = offchainTxs[i];
-		}
-		return pendingOffchainTxs;
+		return offchainTxs[txIdStart];
 	}
 
 	function sendResultFromOffchain(uint256 txId, bytes[] memory result) external {
@@ -45,7 +39,7 @@ contract MessageBox {
 		OffchainTx memory offchainTx = offchainTxs[txId];
 		if (offchainTx.op == OP_GET_GEO_LOCATION_IMAGE) {
 			// (imageId string)
-			emit GeoLocationImage(txId, string(result[0]));
+			emit GeoLocationImageResponse(txId, string(result[0]));
 		} else if (offchainTx.op == OP_CALC_POOL_PARTITION) {
 			// (gameId uint256, uint256[] partitionAmounts)
 		}
@@ -53,15 +47,32 @@ contract MessageBox {
 		txIdStart++;
 	}
 
-    function setMessage(string calldata in_message) external {
-        _message = in_message;
-        author = msg.sender;
-    }
+	function genRandLocationSeed() external view returns (bytes memory) {
+		bytes memory seed = Sapphire.randomBytes(32, "");
+		return seed;
+	}
 
-    function message() external view returns (string memory) {
-      if (msg.sender!=author) {
-        revert("not allowed");
-      }
-      return _message;
-    }
+	function getRandGeoLocation() internal returns (uint256) {
+		return callOffchain(OP_GET_GEO_LOCATION_IMAGE, new bytes[](0));
+	}
+
+	function startGame(uint256 gameId) external {
+		// access restricted to one of the players
+		// update the state of the game using gameId
+		uint256 txId = getRandGeoLocation();
+		emit GeoLocationImageRequest(gameId, txId);
+	}
+
+
+    // function setMessage(string calldata in_message) external {
+    //     _message = in_message;
+    //     author = msg.sender;
+    // }
+
+    // function message() external view returns (string memory) {
+    //   if (msg.sender!=author) {
+    //     revert("not allowed");
+    //   }
+    //   return _message;
+    // }
 }
