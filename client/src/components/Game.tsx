@@ -8,7 +8,7 @@ import { GAME_ABI } from '@/lib/abi/MessageBox';
 import { IndexService } from '@ethsign/sp-sdk';
 
 export const Game = () => {
-  const contractAddress = '0x37dC56819D205a79001ECFF9A5BC1B9F4D5c279e';
+  const contractAddress = '0x1A4a357F22AEf6AC70194FECaeBAe376311ec82f';
   const [game, setGame] = useState('');
   const [imageId, setImageId] = useState();
   const [image, setImage] = useState(null);
