@@ -23,7 +23,7 @@ struct GameState {
     uint256 poolAmount;
     uint256 numUsers;
     address[] userAddresses;
-    uint256[][] userGuesses;
+    string[] userGuesses;
     bool isEnded;
     bool isResolved;
 }
@@ -100,7 +100,7 @@ contract ZeoKuesser {
             0,
             0,
             new address[](0),
-            new uint256[][](0),
+            new string[](0),
             false,
             false
         );
@@ -111,7 +111,7 @@ contract ZeoKuesser {
         // access restricted to one of the players
         // update the state of the game using gameId
         gameStates[gameId].userAddresses.push(msg.sender);
-        gameStates[gameId].userGuesses.push(new uint256[](0));
+        gameStates[gameId].userGuesses.push("");
     }
 
     function getUserIndex(uint256 gameId, address userAddress) internal view returns (uint256) {
@@ -123,7 +123,7 @@ contract ZeoKuesser {
         return 99;
     }
 
-    function guess(uint256 gameId, uint256[] memory userGuess) external payable {
+    function guess(uint256 gameId, string calldata userGuess) external payable {
         uint256 userIndex = getUserIndex(gameId, msg.sender);
         gameStates[gameId].userGuesses[userIndex] = userGuess;
         gameStates[gameId].numUsers++;
