@@ -9,7 +9,7 @@ const CENTER_LATITUDE = 48.86432706201461;
 const CENTER_LONGITUDE = 2.347093922859318;
 const RADIUS = 0.1;
 
-export const generateCoordinatesFromLocationSeed = (seed: string) => {
+export const generateConstrainedCoordinatesFromLocationSeed = (seed: string) => {
     const hex = seed.slice(2);
     let latitude = parseInt(hex.slice(0, 32), 16) / (2 ** 64) * 180 - 90;
     let longitude = parseInt(hex.slice(32, 64), 16) / (2 ** 64) * 360 - 180;
@@ -18,8 +18,15 @@ export const generateCoordinatesFromLocationSeed = (seed: string) => {
     return { latitude, longitude };
 }
 
+export const generateCoordinatesFromLocationSeed = (seed: string) => {
+    const hex = seed.slice(2);
+    let latitude = parseInt(hex.slice(0, 32), 16) / (2 ** 64) * 180 - 90;
+    let longitude = parseInt(hex.slice(32, 64), 16) / (2 ** 64) * 360 - 180;
+    return { latitude, longitude };
+}
+
 export const getDistanceBwLocationSeeds = (seed1: string, seed2: string) => {
-    const { latitude: lat1, longitude: long1 } = generateCoordinatesFromLocationSeed(seed1);
+    const { latitude: lat1, longitude: long1 } = generateConstrainedCoordinatesFromLocationSeed(seed1);
     const { latitude: lat2, longitude: long2 } = generateCoordinatesFromLocationSeed(seed2);
     const R = 6371; // Radius of the Earth in kilometers
 
@@ -60,7 +67,7 @@ async function fetchStreetViewImage(lat: number, lng: number): Promise<string> {
 }
 
 export const gmapMain = async (locationSeed: string) => {
-    const { latitude, longitude } = generateCoordinatesFromLocationSeed(locationSeed);
+    const { latitude, longitude } = generateConstrainedCoordinatesFromLocationSeed(locationSeed);
     console.log(`[INFO] Fetching street view image for latitude: ${latitude}, longitude: ${longitude}`);
     const imageBase64 = await fetchStreetViewImage(latitude, longitude);
     return imageBase64;
