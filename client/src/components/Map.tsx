@@ -1,11 +1,11 @@
-"use client";
-import React, { useState, useCallback } from "react";
-import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
+'use client';
+import React, { useState, useCallback } from 'react';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
 // Set the container size for the map
 const containerStyle = {
-  width: "100%",
-  height: "400px",
+  width: '100%',
+  height: '400px',
 };
 
 // Initial center of the map (latitude, longitude)
@@ -14,15 +14,16 @@ const center = {
   lng: -73.985428,
 };
 
-function MyMap() {
+function MyMap({
+  coordinates,
+  setCoordinates,
+}: {
+  coordinates: { lat: number | null; lng: number | null };
+  setCoordinates: (coordinates: { lat: number | null; lng: number | null }) => void;
+}) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
   });
-
-  const [coordinates, setCoordinates] = useState<{
-    lat: number | null;
-    lng: number | null;
-  }>({ lat: null, lng: null });
 
   // Function to handle the map click event
   const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
@@ -33,12 +34,7 @@ function MyMap() {
 
   return isLoaded ? (
     <div>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={center}
-        zoom={10}
-        onClick={onMapClick}
-      >
+      <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={10} onClick={onMapClick}>
         {/* Show marker at the clicked location */}
         {coordinates.lat && coordinates.lng && (
           <Marker position={{ lat: coordinates.lat, lng: coordinates.lng }} />
