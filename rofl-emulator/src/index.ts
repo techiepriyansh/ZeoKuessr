@@ -55,16 +55,19 @@ const mainLoop = async () => {
             console.log(offchainTx.args)
 
             const locationSeed = offchainTx.args[0];
-            const numUsers = parseInt(offchainTx.args[1], 16);
+            const numUsers = parseInt(offchainTx.args[1].slice(2), 16);
 
             console.log(`[INFO] Location Seed: ${locationSeed}`);
             console.log(`[INFO] Number of Users: ${numUsers}`);
 
+            let userGuesses = offchainTx.args[2].slice(2);
+            let userAmounts = offchainTx.args[3].slice(2);
+
             const userWeights = [];
             let poolAmount = 0;
             for (let i = 0; i < numUsers; i++) {
-                const userGuess = offchainTx.args[2].slice(i * 64, (i + 1) * 64);
-                const userAmount = parseInt(offchainTx.args[3].slice(i * 64, (i + 1) * 64), 16);
+                const userGuess = userGuesses.slice(i * 64, (i + 1) * 64);
+                const userAmount = parseInt(userAmounts.slice(i * 64, (i + 1) * 64), 16);
 
                 console.log(`[INFO] User ${i} Guess: ${userGuess}`);
                 console.log(`[INFO] User ${i} Amount: ${userAmount}`);
