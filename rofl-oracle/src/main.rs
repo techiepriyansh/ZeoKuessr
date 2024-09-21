@@ -15,7 +15,7 @@ impl App for OracleApp {
     /// Identifier of the application (used for registrations).
     // #region app-id
     fn id() -> AppId {
-        "rofl1qqn9xndja7e2pnxhttktmecvwzz0yqwxsquqyxdg".into() // TODO: Replace with your application ID.
+        "rofl1qqn9xndja7e2pnxhttktmecvwzz0yqwxsquqyxdf".into() // TODO: Replace with your application ID.
     }
     // #endregion app-id
 
