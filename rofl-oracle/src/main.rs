@@ -1,4 +1,4 @@
-use oasis_runtime_sdk::modules::rofl::app::prelude::*;
+use oasis_runtime_sdk::{crypto::signature::secp256k1::PublicKey, modules::rofl::app::prelude::*, types::address::SignatureAddressSpec};
 
 /// Address where the oracle contract is deployed.
 // #region oracle-contract-address
