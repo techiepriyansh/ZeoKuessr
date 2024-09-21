@@ -61,6 +61,15 @@ contract ZeoKuessr {
         return offchainTxs[txIdStart];
     }
 
+    function bytesToUint256(bytes memory b) public pure returns (uint256) {
+        require(b.length == 32, "Bytes length must be 32");
+        uint256 output;
+        assembly {
+            output := mload(add(b, 32))
+        }
+        return output;
+    }
+
     function sendResultFromOffchain(uint256 txId, bytes[] memory result) external {
         // TODO: access restricted to the ROFL
         require(txId == txIdStart, "txId does not match the first pending tx");
@@ -70,6 +79,10 @@ contract ZeoKuessr {
             emit GeoLocationImageResponse(offchainTx.gameId, string(result[0]));
         } else if (offchainTx.op == OP_CALC_POOL_PARTITION) {
             // (gameId uint256, uint256[] partitionAmounts)
+            GameState memory game = gameStates[offchainTx.gameId];
+            for (uint256 i = 0; i < game.userAddresses.length; i++) {
+                payable(game.userAddresses[i]).transfer(bytesToUint256(result[i]));
+            }
         }
         delete offchainTxs[txId];
         txIdStart++;
