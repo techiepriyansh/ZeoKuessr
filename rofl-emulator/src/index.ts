@@ -50,17 +50,17 @@ const mainLoop = async () => {
             break;
         }
         case OP_CALC_POOL_PARTITION: {
-            console.log(`[INFO] Processing CALC_POOL_PARTITION for Game ID: ${offchainTx.gameId}`)
+            // console.log(`[INFO] Processing CALC_POOL_PARTITION for Game ID: ${offchainTx.gameId}`)
 
-            const locationSeed = offchainTx.args[0];
-            const numUsers = parseInt(offchainTx.args[1], 16);
+            // const locationSeed = offchainTx.args[0];
+            // const numUsers = parseInt(offchainTx.args[1], 16);
 
-            const userWeights = [];
+            // const userWeights = [];
 
-            for (let i = 0; i < numUsers; i++) {
-                const userGuess = offchainTx.args[2].slice(i * 32, (i + 1) * 32);
-                const userAmount = parseInt(offchainTx.args[3].slice(i * 32, (i + 1) * 32), 16);
-            }
+            // for (let i = 0; i < numUsers; i++) {
+            //     const userGuess = offchainTx.args[2].slice(i * 32, (i + 1) * 32);
+            //     const userAmount = parseInt(offchainTx.args[3].slice(i * 32, (i + 1) * 32), 16);
+            // }
         }
         default: {
             console.log(`[ERROR] Unknown operation: ${offchainTx.op}`)
