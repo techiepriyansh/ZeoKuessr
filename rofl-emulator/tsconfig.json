@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES6",                          // Specifies ECMAScript target version.
+    "target": "ES2020",                          // Specifies ECMAScript target version.
     "module": "CommonJS",                     // Use CommonJS module system for Node.js compatibility.
     "rootDir": "./src",                       // Root directory of TypeScript files.
     "outDir": "./dist",                       // Output directory for compiled files.

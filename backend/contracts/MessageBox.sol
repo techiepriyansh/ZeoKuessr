@@ -12,11 +12,21 @@ struct OffchainTx {
 	bytes[] args;
 }
 
+struct GameState {
+	uint256 gameId;
+	bytes locationSeed;
+}
+
 contract MessageBox {
+	mapping(uint256 => GameState) private gameStates;
+	uint256 private gameIdEnd = 1;
+
 	mapping(uint256 => OffchainTx) private offchainTxs;
 
 	uint256 private txIdStart = 1;
 	uint256 private txIdEnd = 1;
+
+	event NewGameCrated(uint256 indexed gameId);
 
 	event GeoLocationImageRequest(uint256 indexed gameId, uint256 txId);
 	event GeoLocationImageResponse(uint256 indexed txId, string imageId);
@@ -30,6 +40,9 @@ contract MessageBox {
 
 	function getFirstPendingOffchainTx() external view returns (OffchainTx memory) {
 		// TODO: access restricted to the ROFL
+		if (txIdStart == txIdEnd) {
+			return OffchainTx(0, 0, new bytes[](0));
+		}
 		return offchainTxs[txIdStart];
 	}
 
@@ -47,20 +60,30 @@ contract MessageBox {
 		txIdStart++;
 	}
 
-	function genRandLocationSeed() external view returns (bytes memory) {
+	function genRandLocationSeed() internal view returns (bytes memory) {
 		bytes memory seed = Sapphire.randomBytes(32, "");
 		return seed;
 	}
 
-	function getRandGeoLocation() internal returns (uint256) {
-		return callOffchain(OP_GET_GEO_LOCATION_IMAGE, new bytes[](0));
+	function getRandGeoLocation(bytes memory locationSeed) internal returns (uint256) {
+		bytes[] memory args = new bytes[](1);
+		args[0] = locationSeed;
+		return callOffchain(OP_GET_GEO_LOCATION_IMAGE, args);
 	}
 
 	function startGame(uint256 gameId) external {
 		// access restricted to one of the players
 		// update the state of the game using gameId
-		uint256 txId = getRandGeoLocation();
+		bytes memory locationSeed = genRandLocationSeed();
+		gameStates[gameId].locationSeed = locationSeed;
+		uint256 txId = getRandGeoLocation(locationSeed);
 		emit GeoLocationImageRequest(gameId, txId);
+	}
+
+	function newGame() external {
+		uint256 gameId = gameIdEnd++;
+		gameStates[gameId] = GameState(gameId, new bytes(0));
+		emit NewGameCrated(gameId);
 	}
 
 

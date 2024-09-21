@@ -52,6 +52,17 @@ task('deploy')
     return messageBox;
 });
 
+task('newGame')
+  .addPositionalParam('address', 'contract address')
+  .setAction(async (args, hre) => {
+    await hre.run('compile');
+
+    let messageBox = await hre.ethers.getContractAt('MessageBox', args.address);
+    const tx = await messageBox.newGame();
+    const receipt = await tx.wait();
+    console.log(receipt);
+  });
+
 task('startGame')
   .addPositionalParam('address', 'contract address')
   .addPositionalParam('gameId', 'game id')
