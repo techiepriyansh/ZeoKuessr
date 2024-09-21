@@ -31,5 +31,6 @@ async function fetchStreetViewImage(lat: number, lng: number): Promise<string> {
 export const gmapMain = async (locationSeed: string) => {
     const { latitude, longitude } = generateCoordinatesFromLocationSeed(locationSeed);
     console.log(`[INFO] Fetching street view image for latitude: ${latitude}, longitude: ${longitude}`);
-    const image = await fetchStreetViewImage(latitude, longitude);
+    const imageBase64 = await fetchStreetViewImage(latitude, longitude);
+    return imageBase64;
 }

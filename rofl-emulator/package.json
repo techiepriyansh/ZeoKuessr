@@ -15,8 +15,10 @@
     "typescript": "^5.6.2"
   },
   "dependencies": {
+    "@ethsign/sp-sdk": "^0.7.5",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
-    "ethers": "^6.10.0"
+    "ethers": "^6.10.0",
+    "viem": "^2.21.10"
   }
 }
