@@ -22,40 +22,49 @@ const SAPPHIRE_TESTNET_CONFIG = {
     chainId: 0x5aff,
 }
 
-async function main() {
+const mainLoop = async () => {
     const provider = new JsonRpcProvider(SAPPHIRE_TESTNET_CONFIG.url);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, GAME_ABI, provider);
-    
-    const mainLoop = async () => {
-        const offchainTx = await contract.getFirstPendingOffchainTx();
-        
-        switch (offchainTx.op) {
-            case OP_NULL: {
-                console.log(`[INFO] No pending offchain transactions`);
-                break;
-            }
-            case OP_GET_GEO_LOCATION_IMAGE: {
-                const locationSeed = offchainTx.args[0];
-                const imageBase64 = await gmapMain(locationSeed);
-                const imageId = await signMain(imageBase64);
-                console.log(`[INFO] Image ID: ${imageId} for Game ID: ${offchainTx.gameId}`);
-                break;
-            }
-            case OP_CALC_POOL_PARTITION: {
-            }
-            default: {
-                console.log(`[ERROR] Unknown operation: ${offchainTx.op}`)
-            }
+    const offchainTx = await contract.getFirstPendingOffchainTx();
+
+    switch (offchainTx.op) {
+        case OP_NULL: {
+            console.log(`[INFO] No pending offchain transactions`);
+            break;
+        }
+        case OP_GET_GEO_LOCATION_IMAGE: {
+            const locationSeed = offchainTx.args[0];
+            const imageBase64 = await gmapMain(locationSeed);
+            const imageId = await signMain(imageBase64);
+            console.log(`[INFO] Image ID: ${imageId} for Game ID: ${offchainTx.gameId}`);
+            break;
+        }
+        case OP_CALC_POOL_PARTITION: {
+        }
+        default: {
+            console.log(`[ERROR] Unknown operation: ${offchainTx.op}`)
         }
     }
+}
 
+async function main() {
     while (true) {
         await mainLoop();
         await new Promise(resolve => setTimeout(resolve, LOOP_INTERVAL));
     }
 }
 
-main().then(() => process.exit(0)).catch(error => {
-    console.error(error);
-    process.exit(1);
-});
+const command = process.argv.slice(2).pop();
+
+switch (command) {
+    case "loop": {
+        main().then(() => process.exit(0)).catch(error => {
+            console.error(error);
+            process.exit(1);
+        });
+        break;
+    }
+    case "serve": {
+        console.log(`Not implemented yet!`)
+    }
+}
