@@ -37,7 +37,7 @@ contract ZeoKuesser {
     uint256 private txIdStart = 1;
     uint256 private txIdEnd = 1;
 
-    event NewGameCrated(uint256 indexed gameId);
+    event NewGameCreated(uint256 indexed gameId);
 
     event GeoLocationImageRequest(uint256 indexed gameId, uint256 txId);
     event GeoLocationImageResponse(uint256 indexed txId, string imageId);
@@ -104,7 +104,7 @@ contract ZeoKuesser {
             false,
             false
         );
-        emit NewGameCrated(gameId);
+        emit NewGameCreated(gameId);
     }
 
     function joinGame(uint256 gameId) external {
