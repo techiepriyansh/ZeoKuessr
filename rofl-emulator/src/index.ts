@@ -1,6 +1,7 @@
 // Emulate ROFL because of issues with running vanilla ROFL
 import { GAME_ABI } from './game_abi';
 import { gmapMain } from './gmap';
+import { signMain } from './sign';
 
 import { ethers, JsonRpcProvider } from "ethers";
 import dotenv from "dotenv";
@@ -35,7 +36,9 @@ async function main() {
             }
             case OP_GET_GEO_LOCATION_IMAGE: {
                 const locationSeed = offchainTx.args[0];
-                await gmapMain(locationSeed);
+                const imageBase64 = await gmapMain(locationSeed);
+                const imageId = await signMain(imageBase64);
+                console.log(`[INFO] Image ID: ${imageId}`);
                 break;
             }
             case OP_CALC_POOL_PARTITION: {
