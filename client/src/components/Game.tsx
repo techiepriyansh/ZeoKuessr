@@ -73,8 +73,12 @@ export const Game = () => {
 
   const generateLocationSeedFromCoordinates = (latitude: number, longitude: number) => {
     console.log(latitude, longitude);
-    const latHex = Math.round(((latitude + 90) / 180) * (2 ** 128)).toString(16).padStart(32, '0');
-    const lonHex = Math.round(((longitude + 180) / 360) * (2 ** 128)).toString(16).padStart(32, '0');
+    const latHex = Math.round(((latitude + 90) / 180) * 2 ** 128)
+      .toString(16)
+      .padStart(32, '0');
+    const lonHex = Math.round(((longitude + 180) / 360) * 2 ** 128)
+      .toString(16)
+      .padStart(32, '0');
     console.log(latHex, lonHex);
     return '0x' + latHex + lonHex;
   };
@@ -87,7 +91,7 @@ export const Game = () => {
       coordinates.lat as number,
       coordinates.lng as number,
     );
-    const tx = await contract.guess(game, seed);
+    const tx = await contract.guess(game, seed, { value: ethers.parseEther(bet) });
     await tx.wait();
   };
 
