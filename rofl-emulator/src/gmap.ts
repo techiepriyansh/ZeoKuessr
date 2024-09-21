@@ -11,8 +11,8 @@ const RADIUS = 0.1;
 
 export const generateConstrainedCoordinatesFromLocationSeed = (seed: string) => {
     const hex = seed.slice(2);
-    let latitude = parseInt(hex.slice(0, 32), 16) / (2 ** 64) * 180 - 90;
-    let longitude = parseInt(hex.slice(32, 64), 16) / (2 ** 64) * 360 - 180;
+    let latitude = parseInt(hex.slice(0, 32), 16) / (2 ** 128) * 180 - 90;
+    let longitude = parseInt(hex.slice(32, 64), 16) / (2 ** 128) * 360 - 180;
     latitude = CENTER_LATITUDE + latitude/180 * RADIUS;
     longitude = CENTER_LONGITUDE + longitude/360 * RADIUS;
     return { latitude, longitude };
@@ -20,8 +20,8 @@ export const generateConstrainedCoordinatesFromLocationSeed = (seed: string) => 
 
 export const generateCoordinatesFromLocationSeed = (seed: string) => {
     const hex = seed.slice(2);
-    let latitude = parseInt(hex.slice(0, 32), 16) / (2 ** 64) * 180 - 90;
-    let longitude = parseInt(hex.slice(32, 64), 16) / (2 ** 64) * 360 - 180;
+    let latitude = parseInt(hex.slice(0, 32), 16) / (2 ** 128) * 180 - 90;
+    let longitude = parseInt(hex.slice(32, 64), 16) / (2 ** 128) * 360 - 180;
     return { latitude, longitude };
 }
 
