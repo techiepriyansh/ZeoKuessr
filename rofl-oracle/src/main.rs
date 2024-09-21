@@ -1,5 +1,4 @@
-use oasis_runtime_sdk::modules::rofl::app::prelude::*;
-
+use oasis_runtime_sdk::{crypto::signature::secp256k1::PublicKey, modules::rofl::app::prelude::*, types::address::SignatureAddressSpec};
 /// Address where the oracle contract is deployed.
 // #region oracle-contract-address
 const ORACLE_CONTRACT_ADDRESS: &str = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // TODO: Replace with your contract address.
@@ -57,43 +56,63 @@ impl OracleApp {
         // Fetch data from remote service.
         println!("WOW!");
         
-        let observation = tokio::task::spawn_blocking(move || -> Result<_> {
-            // Request some data from Coingecko API.
-            let rsp: serde_json::Value = rofl_utils::https::agent()
-                .get("https://www.binance.com/api/v3/ticker/price?symbol=ROSEUSDT")
-                .call()?
-                .body_mut()
-                .read_json()?;
+        // let observation = tokio::task::spawn_blocking(move || -> Result<_> {
+        //     // Request some data from Coingecko API.
+        //     let rsp: serde_json::Value = rofl_utils::https::agent()
+        //         .get("https://www.binance.com/api/v3/ticker/price?symbol=ROSEUSDT")
+        //         .call()?
+        //         .body_mut()
+        //         .read_json()?;
 
-            // Extract price and convert to integer.
-            let price = rsp
-                .pointer("/price")
-                .ok_or(anyhow::anyhow!("price not available"))?
-                .as_str().unwrap()
-                .parse::<f64>()?;
-            let price = (price * 1_000_000.0) as u128;
+        //     // Extract price and convert to integer.
+        //     let price = rsp
+        //         .pointer("/price")
+        //         .ok_or(anyhow::anyhow!("price not available"))?
+        //         .as_str().unwrap()
+        //         .parse::<f64>()?;
+        //     let price = (price * 1_000_000.0) as u128;
 
-            Ok(price)
-        }).await??;
+        //     Ok(price)
+        // }).await??;
 
-        // Prepare the oracle contract call.
-        let mut tx = self.new_transaction(
-            "evm.Call",
-            module_evm::types::Call {
-                address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
+        let sdk_pub_key = PublicKey::from_bytes(env.signer().public_key().as_bytes()).unwrap();
+        let res = env.client().query(
+            0,
+            "evm.SimulateCall",
+            module_evm::types::SimulateCallQuery {
+                gas_price: 10.into(),
+                gas_limit: 100_000,
+                caller: module_evm::derive_caller::from_sigspec(&SignatureAddressSpec::Secp256k1Eth(sdk_pub_key)).unwrap(),
+                address: None,
                 value: 0.into(),
                 data: [
-                    ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
-                        .to_vec(),
-                    ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
-                ]
-                .concat(),
+                ethabi::short_signature("getFirstPendingOffchainTx", &[]).to_vec(),
+                ethabi::encode(&[]),
+                ].concat(),
             },
-        );
-        tx.set_fee_gas(200_000);
+        ).await?; 
 
-        // Submit observation on chain.env
-        env.client().sign_and_submit_tx(env.signer(), tx).await?;
+        println!("ZAMN");
+        println!("lfg: {:?}", res);
+        // let mut tx = self.new_transaction(
+
+        // // Prepare the oracle contract call.
+        //     "evm.Call",
+        //     module_evm::types::Call {
+        //         address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
+        //         value: 0.into(),
+        //         data: [
+        //             ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
+        //                 .to_vec(),
+        //             ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
+        //         ]
+        //         .concat(),
+        //     },
+        // );
+        // tx.set_fee_gas(200_000);
+
+        // // Submit observation on chain.env
+        // env.client().sign_and_submit_tx(env.signer(), tx).await?;
 
         Ok(())
     }
