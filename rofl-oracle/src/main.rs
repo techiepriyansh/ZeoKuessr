@@ -95,25 +95,26 @@ impl OracleApp {
 
         println!("ZAMN");
         println!("lfg: {:?}", observation);
-        // let mut tx = self.new_transaction(
+        
+        let mut tx = self.new_transaction(
 
-        // // Prepare the oracle contract call.
-        //     "evm.Call",
-        //     module_evm::types::Call {
-        //         address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
-        //         value: 0.into(),
-        //         data: [
-        //             ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
-        //                 .to_vec(),
-        //             ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
-        //         ]
-        //         .concat(),
-        //     },
-        // );
-        // tx.set_fee_gas(200_000);
+        // Prepare the oracle contract call.
+            "evm.Call",
+            module_evm::types::Call {
+                address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
+                value: 0.into(),
+                data: [
+                    ethabi::short_signature("test42", &[])
+                        .to_vec(),
+                    ethabi::encode(&[]),
+                ]
+                .concat(),    
+            },
+        );
+        tx.set_fee_gas(200_000);
 
-        // // Submit observation on chain.env
-        // env.client().sign_and_submit_tx(env.signer(), tx).await?;
+        // Submit observation on chain.env
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
 
         // let sdk_pub_key = PublicKey::from_bytes(env.signer().public_key().as_bytes()).unwrap();
         // let res = env.client().query(
@@ -132,14 +133,32 @@ impl OracleApp {
         //     },
         // ).await?;
 
-        
-        let mut tx_id: U256 = U256::from(12345);
+        // Testing
+        // let mut tx = self.new_transaction(
+        //     "evm.Call",
+        //     module_evm::types::Call {
+        //         address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
+        //         value: 0.into(),
+        //         data: [
+        //             ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
+        //                 .to_vec(),
+        //             ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
+        //         ]
+        //         .concat(),
+        //     },
+        // );
+        // tx.set_fee_gas(200_000);
+
+        // // Submit observation on chain.
+        // env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        let mut tx_id = U256::from(12345);
         let result: Vec<Vec<u8>> = vec![
             vec![0x01, 0x02, 0x03],  // First byte array
             vec![0x04, 0x05],        // Second byte array
-            ];
+        ];
             
-        println!("ENGINIGGER PUSH 1");
+        println!("PUSH 1");
         
         let mut tx = self.new_transaction(
             "evm.Call",
@@ -161,14 +180,14 @@ impl OracleApp {
                     },
                 );
         
-        println!("ENGINIGGER PUSH 2");
+        println!("PUSH 2");
         
         tx.set_fee_gas(200_000);
                 
         // Submit observation on chain.
         env.client().sign_and_submit_tx(env.signer(), tx).await?;
         
-        println!("ENGINIGGER PUSH 3");
+        println!("PUSH 3");
 
         Ok(())
     }
