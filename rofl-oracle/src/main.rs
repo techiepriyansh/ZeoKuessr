@@ -2,7 +2,7 @@ use oasis_runtime_sdk::modules::rofl::app::prelude::*;
 
 /// Address where the oracle contract is deployed.
 // #region oracle-contract-address
-const ORACLE_CONTRACT_ADDRESS: &str = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707"; // TODO: Replace with your contract address.
+const ORACLE_CONTRACT_ADDRESS: &'static str = env!("SAPPHIRE_GAME_CONTRACT_ADDRESS"); // TODO: Replace with your contract address.
 // #endregion oracle-contract-address
 
 struct OracleApp;
