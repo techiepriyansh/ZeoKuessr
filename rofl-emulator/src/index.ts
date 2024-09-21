@@ -51,27 +51,40 @@ const mainLoop = async () => {
         }
         case OP_CALC_POOL_PARTITION: {
             console.log(`[INFO] Processing CALC_POOL_PARTITION for Game ID: ${offchainTx.gameId}`)
+
             console.log(offchainTx.args)
 
             const locationSeed = offchainTx.args[0];
             const numUsers = parseInt(offchainTx.args[1], 16);
+
+            console.log(`[INFO] Location Seed: ${locationSeed}`);
+            console.log(`[INFO] Number of Users: ${numUsers}`);
 
             const userWeights = [];
             let poolAmount = 0;
             for (let i = 0; i < numUsers; i++) {
                 const userGuess = offchainTx.args[2].slice(i * 64, (i + 1) * 64);
                 const userAmount = parseInt(offchainTx.args[3].slice(i * 64, (i + 1) * 64), 16);
+
+                console.log(`[INFO] User ${i} Guess: ${userGuess}`);
+                console.log(`[INFO] User ${i} Amount: ${userAmount}`);
+
                 const distance = getDistanceBwLocationSeeds(locationSeed, userGuess);
+
+                console.log(`[INFO] User ${i} Distance: ${distance}`)
+
                 const weight = userAmount / distance;
                 userWeights.push(weight);
                 poolAmount += userAmount;
             }
 
+            const totalWeight = userWeights.reduce((a, b) => a + b, 0);
+
             const poolPartition = [];
             for (let i = 0; i < numUsers; i++) {
-                const userPartition = Math.floor(poolAmount * userWeights[i]);
+                const userPartition = Math.floor(poolAmount * userWeights[i] / totalWeight);
                 const userPartitionHex = BigInt(userPartition).toString(16).padStart(64, '0');
-                poolPartition.push(userPartition);
+                poolPartition.push(userPartitionHex);
             }
 
             console.log(poolPartition);
