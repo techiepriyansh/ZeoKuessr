@@ -24,6 +24,7 @@ struct GameState {
     uint256 numUsers;
     address[] userAddresses;
     string[] userGuesses;
+    uint256[] userAmounts;
     bool isEnded;
     bool isResolved;
 }
@@ -101,6 +102,7 @@ contract ZeoKuesser {
             0,
             new address[](0),
             new string[](0),
+            new uint256[](0),
             false,
             false
         );
@@ -112,6 +114,7 @@ contract ZeoKuesser {
         // update the state of the game using gameId
         gameStates[gameId].userAddresses.push(msg.sender);
         gameStates[gameId].userGuesses.push("");
+        gameStates[gameId].userAmounts.push(0);
     }
 
     function getUserIndex(uint256 gameId, address userAddress) internal view returns (uint256) {
@@ -128,6 +131,7 @@ contract ZeoKuesser {
         gameStates[gameId].userGuesses[userIndex] = userGuess;
         gameStates[gameId].numUsers++;
         gameStates[gameId].poolAmount += msg.value;
+        gameStates[gameId].userAmounts[userIndex] = msg.value;
     }
 
     function endGame(uint256 gameId) external {
