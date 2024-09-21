@@ -1,5 +1,4 @@
-use oasis_runtime_sdk::modules::rofl::app::prelude::*;
-
+use oasis_runtime_sdk::{crypto::signature::secp256k1::PublicKey, modules::rofl::app::prelude::*, types::address::SignatureAddressSpec};
 /// Address where the oracle contract is deployed.
 // #region oracle-contract-address
 const ORACLE_CONTRACT_ADDRESS: &str = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // TODO: Replace with your contract address.
@@ -58,42 +57,62 @@ impl OracleApp {
         println!("WOW!");
         
         let observation = tokio::task::spawn_blocking(move || -> Result<_> {
+            println!("SHIKA1!");
+            
             // Request some data from Coingecko API.
             let rsp: serde_json::Value = rofl_utils::https::agent()
-                .get("https://www.binance.com/api/v3/ticker/price?symbol=ROSEUSDT")
-                .call()?
-                .body_mut()
-                .read_json()?;
-
+            .get("https://www.binance.com/api/v3/ticker/price?symbol=ROSEUSDT")
+            .call()?
+            .body_mut()
+            .read_json()?;
+        
+            println!("SHIKA2!");
+            
             // Extract price and convert to integer.
             let price = rsp
-                .pointer("/price")
-                .ok_or(anyhow::anyhow!("price not available"))?
-                .as_str().unwrap()
-                .parse::<f64>()?;
+            .pointer("/price")
+            .ok_or(anyhow::anyhow!("price not available"))?
+            .as_str().unwrap()
+            .parse::<f64>()?;
             let price = (price * 1_000_000.0) as u128;
-
+        
+            println!("SHIKA2!");
             Ok(price)
         }).await??;
 
-        // Prepare the oracle contract call.
-        let mut tx = self.new_transaction(
-            "evm.Call",
-            module_evm::types::Call {
-                address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
-                value: 0.into(),
-                data: [
-                    ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
-                        .to_vec(),
-                    ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
-                ]
-                .concat(),
-            },
-        );
-        tx.set_fee_gas(200_000);
+        // let observation = tokio::task::spawn_blocking(move || -> Result<_> {
+        //     // Request some data from Coingecko API.
+        //     let rsp: serde_json::Value = serde_json::Value::String
+        //         (rofl_utils::https::agent()
+        //         .get("https://cock-sg24.free.beeceptor.com/")
+        //         .call()?
+        //         .body_mut()
+        //         .read_to_string()?);
 
-        // Submit observation on chain.env
-        env.client().sign_and_submit_tx(env.signer(), tx).await?;
+        //     Ok(rsp)
+        // }).await??; 
+
+        println!("ZAMN");
+        println!("lfg: {:?}", observation);
+        // let mut tx = self.new_transaction(
+
+        // // Prepare the oracle contract call.
+        //     "evm.Call",
+        //     module_evm::types::Call {
+        //         address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
+        //         value: 0.into(),
+        //         data: [
+        //             ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
+        //                 .to_vec(),
+        //             ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
+        //         ]
+        //         .concat(),
+        //     },
+        // );
+        // tx.set_fee_gas(200_000);
+
+        // // Submit observation on chain.env
+        // env.client().sign_and_submit_tx(env.signer(), tx).await?;
 
         Ok(())
     }
