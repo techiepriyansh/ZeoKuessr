@@ -66,7 +66,7 @@ const mainLoop = async () => {
             const userWeights = [];
             let poolAmount = 0;
             for (let i = 0; i < numUsers; i++) {
-                const userGuess = userGuesses.slice(i * 64, (i + 1) * 64);
+                const userGuess = '0x' + userGuesses.slice(i * 64, (i + 1) * 64);
                 const userAmount = parseInt(userAmounts.slice(i * 64, (i + 1) * 64), 16);
 
                 console.log(`[INFO] User ${i} Guess: ${userGuess}`);
@@ -86,7 +86,7 @@ const mainLoop = async () => {
             const poolPartition = [];
             for (let i = 0; i < numUsers; i++) {
                 const userPartition = Math.floor(poolAmount * userWeights[i] / totalWeight);
-                const userPartitionHex = BigInt(userPartition).toString(16).padStart(64, '0');
+                const userPartitionHex = '0x' + BigInt(userPartition).toString(16).padStart(64, '0');
                 poolPartition.push(userPartitionHex);
             }
 
