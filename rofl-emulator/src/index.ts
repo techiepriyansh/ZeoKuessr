@@ -24,7 +24,8 @@ const SAPPHIRE_TESTNET_CONFIG = {
 
 const mainLoop = async () => {
     const provider = new JsonRpcProvider(SAPPHIRE_TESTNET_CONFIG.url);
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, GAME_ABI, provider);
+    const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, GAME_ABI, wallet);
     const offchainTx = await contract.getFirstPendingOffchainTx();
 
     switch (offchainTx.op) {
@@ -33,13 +34,37 @@ const mainLoop = async () => {
             break;
         }
         case OP_GET_GEO_LOCATION_IMAGE: {
+            console.log(`[INFO] Processing GET_GEO_LOCATION_IMAGE for Game ID: ${offchainTx.gameId}`)
+
             const locationSeed = offchainTx.args[0];
             const imageBase64 = await gmapMain(locationSeed);
             const imageId = await signMain(imageBase64);
-            console.log(`[INFO] Image ID: ${imageId} for Game ID: ${offchainTx.gameId}`);
+            
+            console.log(`[INFO] Image ID: ${imageId}`);
+
+            const imageIdHex = ethers.hexlify(ethers.toUtf8Bytes(imageId));
+            const tx = await contract.sendResultFromOffchain(offchainTx.id, [imageIdHex]);
+            const receipt = await tx.wait();
+            console.log(receipt);
+
             break;
         }
         case OP_CALC_POOL_PARTITION: {
+            console.log(`[INFO] Processing CALC_POOL_PARTITION for Game ID: ${offchainTx.gameId}`)
+
+            const locationSeed = offchainTx.args[0];
+            const numUsers = parseInt(offchainTx.args[1], 16);
+            
+            const userGuesses = [];
+            for (let i = 0; i < numUsers; i++) {
+                userGuesses.push(offchainTx.args[2].slice(i * 32, (i + 1) * 32));
+            }
+
+            const userAmounts = [];
+            for (let i = 0; i < numUsers; i++) {
+                const amt = parseInt(offchainTx.args[3].slice(i * 32, (i + 1) * 32), 16);
+                userAmounts.push(amt);
+            }
         }
         default: {
             console.log(`[ERROR] Unknown operation: ${offchainTx.op}`)

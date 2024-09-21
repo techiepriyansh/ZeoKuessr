@@ -5,7 +5,7 @@ dotenv.config();
 
 const API_KEY = process.env.GMAP_API_KEY;
 
-function generateCoordinatesFromLocationSeed(seed: string): { latitude: number; longitude: number } {
+export const generateCoordinatesFromLocationSeed = (seed: string) => {
     const hex = seed.slice(2);
     const latitude = parseInt(hex.slice(0, 16), 16) / (2 ** 64) * 180 - 90;
     const longitude = parseInt(hex.slice(16, 32), 16) / (2 ** 64) * 360 - 180;
