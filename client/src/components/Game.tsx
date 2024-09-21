@@ -78,10 +78,10 @@ export const Game = () => {
     const lat = ((latitude - CENTER_LATITUDE) / RADIUS) * 180;
     const lon = ((longitude - CENTER_LONGITUDE) / RADIUS) * 360;
 
-    const latHex = Math.round(((lat + 90) / 180) * 2 ** 64)
+    const latHex = BigInt(Math.round(((lat + 90) / 180) * 2 ** 64))
       .toString(16)
       .padStart(32, '0');
-    const lonHex = Math.round(((lon + 180) / 360) * 2 ** 64)
+    const lonHex = BigInt(Math.round(((lon + 180) / 360) * 2 ** 64))
       .toString(16)
       .padStart(32, '0');
 
@@ -96,7 +96,15 @@ export const Game = () => {
       coordinates.lat as number,
       coordinates.lng as number,
     );
-    const tx = await contract.guess(game, seed);
+    const tx = await contract.guess(game, seed); 
+    await tx.wait();
+  };
+
+  const endGame = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = sapphire.wrap(await provider.getSigner());
+    const contract = new ethers.Contract(contractAddress, GAME_ABI, signer);
+    const tx = await contract.endGame(game);
     await tx.wait();
   };
   return (
@@ -117,7 +125,7 @@ export const Game = () => {
               {isJoined ? 'Start Game' : 'Join Game'}
             </button>
             <button
-              onClick={() => setGame(null)}
+              onClick={endGame}
               className="bg-red-500 text-white p-2 rounded mt-5"
             >
               End Game
