@@ -19,13 +19,26 @@ export const generateCoordinatesFromLocationSeed = (seed: string) => {
 }
 
 export const getDistanceBwLocationSeeds = (seed1: string, seed2: string) => {
-    const { latitude: lat1, longitude: lng1 } = generateCoordinatesFromLocationSeed(seed1);
-    const { latitude: lat2, longitude: lng2 } = generateCoordinatesFromLocationSeed(seed2);
-    const R = 6371e3; // km
+    const { latitude: lat1, longitude: long1 } = generateCoordinatesFromLocationSeed(seed1);
+    const { latitude: lat2, longitude: long2 } = generateCoordinatesFromLocationSeed(seed2);
+    const R = 6371; // Radius of the Earth in kilometers
 
-    const phi = lat1 * Math.PI / 180;
-    const phi2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    // Convert degrees to radians
+    const toRadians = (degree) => degree * (Math.PI / 180);
+  
+    const dLat = toRadians(lat2 - lat1);
+    const dLong = toRadians(long2 - long1);
+  
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+      Math.sin(dLong / 2) * Math.sin(dLong / 2);
+  
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    const distance = R * c; // Distance in kilometers
+  
+    return distance;
 
 }
 
