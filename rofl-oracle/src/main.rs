@@ -1,4 +1,4 @@
-use oasis_runtime_sdk::{crypto::signature::secp256k1::PublicKey, modules::rofl::app::prelude::*, types::address::SignatureAddressSpec};
+use oasis_runtime_sdk::modules::rofl::app::prelude::*;
 
 /// Address where the oracle contract is deployed.
 // #region oracle-contract-address
@@ -24,13 +24,15 @@ impl App for OracleApp {
     // #region consensus-trust-root
     fn consensus_trust_root() -> Option<TrustRoot> {
         // The trust root below is for Sapphire Testnet at consensus height 22110615.
-        Some(TrustRoot {
-            height: 22110615,
-            hash: "95d1501f9cb88619050a5b422270929164ce739c5d803ed9500285b3b040985e".into(),
-            runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c".into(),
-            chain_context: "0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76"
-                .to_string(),
-        })
+        // Some(TrustRoot {
+        //     height: 22110615,
+        //     hash: "95d1501f9cb88619050a5b422270929164ce739c5d803ed9500285b3b040985e".into(),
+        //     runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c".into(),
+        //     chain_context: "0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76"
+        //         .to_string(),
+        // })
+
+        None
     }
     // #endregion consensus-trust-root
 
@@ -53,70 +55,51 @@ impl OracleApp {
     /// Fetch stuff from remote service via HTTPS and publish it on chain.
     async fn run_oracle(self: Arc<Self>, env: Environment<Self>) -> Result<()> {
         // Fetch data from remote service.
-        // let observation = tokio::task::spawn_blocking(move || -> Result<_> {
-        //     // Request some data from Coingecko API.
-        //     let rsp: serde_json::Value = rofl_utils::https::agent()
-        //         .get("https://www.binance.com/api/v3/ticker/price?symbol=ROSEUSDT")
-        //         .call()?
-        //         .body_mut()
-        //         .read_json()?;
+        println!("WOW!");
+        
+        let observation = tokio::task::spawn_blocking(move || -> Result<_> {
+            // Request some data from Coingecko API.
+            let rsp: serde_json::Value = rofl_utils::https::agent()
+                .get("https://www.binance.com/api/v3/ticker/price?symbol=ROSEUSDT")
+                .call()?
+                .body_mut()
+                .read_json()?;
 
-        //     // Extract price and convert to integer.
-        //     let price = rsp
-        //         .pointer("/price")
-        //         .ok_or(anyhow::anyhow!("price not available"))?
-        //         .as_str().unwrap()
-        //         .parse::<f64>()?;
-        //     let price = (price * 1_000_000.0) as u128;
+            // Extract price and convert to integer.
+            let price = rsp
+                .pointer("/price")
+                .ok_or(anyhow::anyhow!("price not available"))?
+                .as_str().unwrap()
+                .parse::<f64>()?;
+            let price = (price * 1_000_000.0) as u128;
 
-        //     Ok(price)
-        // }).await??;
+            Ok(price)
+        }).await??;
 
-        println!("Hello, it got compiled!");
-
-        let sdk_pub_key = PublicKey::from_bytes(env.signer().public_key().as_bytes()).unwrap();
-
-        let res = env.client().query(
-            0,
-            "evm.SimulateCall",
-            module_evm::types::SimulateCallQuery {
-                gas_price: 10.into(),
-                gas_limit: 100_000,
-                caller: module_evm::derive_caller::from_sigspec(&SignatureAddressSpec::Secp256k1Eth(sdk_pub_key)).unwrap(),
-                address: None,
+        // Prepare the oracle contract call.
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
                 value: 0.into(),
                 data: [
-                ethabi::short_signature("getFirstPendingOffchainTx", &[]).to_vec(),
-                ethabi::encode(&[]),
-                ].concat(),
+                    ethabi::short_signature("submitObservation", &[ethabi::ParamType::Uint(128)])
+                        .to_vec(),
+                    ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
+                ]
+                .concat(),
             },
-        ).await?;
+        );
+        tx.set_fee_gas(200_000);
 
-        println!("{:?}", res);
-
-        // // Prepare the oracle contract call.
-        // let mut tx = self.new_transaction(
-        //     "evm.Call",
-        //     module_evm::types::Call {
-        //         address: ORACLE_CONTRACT_ADDRESS.parse().unwrap(),
-        //         value: 0.into(),
-        //         data: [
-        //             ethabi::short_signature("getFirstPendingOffchainTx", &[ethabi::ParamType::Uint(128)])
-        //                 .to_vec(),
-        //             ethabi::encode(&[ethabi::Token::Uint(observation.into())]),
-        //         ]
-        //         .concat(),
-        //     },
-        // );
-        // tx.set_fee_gas(200_000);
-
-        // // Submit observation on chain.
-        // env.client().sign_and_submit_tx(env.signer(), tx).await?;
+        // Submit observation on chain.env
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
 
         Ok(())
     }
 }
 
 fn main() {
+    // println!("entry point");
     OracleApp.start();
 }
