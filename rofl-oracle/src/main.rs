@@ -74,23 +74,23 @@ impl OracleApp {
 
         println!("Hello, it got compiled!");
 
-        // let sdk_pub_key = PublicKey::from_bytes(env.signer().public_key().as_bytes()).unwrap();
+        let sdk_pub_key = PublicKey::from_bytes(env.signer().public_key().as_bytes()).unwrap();
 
-        // let res = env.client().query(
-        //     0,
-        //     "evm.SimulateCall",
-        //     module_evm::types::SimulateCallQuery {
-        //         gas_price: 10.into(),
-        //         gas_limit: 100_000,
-        //         caller: module_evm::derive_caller::from_sigspec(&SignatureAddressSpec::Secp256k1Eth(sdk_pub_key)).unwrap(),
-        //         address: None,
-        //         value: 0.into(),
-        //         data: [
-        //         ethabi::short_signature("getFirstPendingOffchainTx", &[]).to_vec(),
-        //         ethabi::encode(&[]),
-        //         ].concat(),
-        //     },
-        // ).await?;
+        let res = env.client().query(
+            0,
+            "evm.SimulateCall",
+            module_evm::types::SimulateCallQuery {
+                gas_price: 10.into(),
+                gas_limit: 100_000,
+                caller: module_evm::derive_caller::from_sigspec(&SignatureAddressSpec::Secp256k1Eth(sdk_pub_key)).unwrap(),
+                address: None,
+                value: 0.into(),
+                data: [
+                ethabi::short_signature("getFirstPendingOffchainTx", &[]).to_vec(),
+                ethabi::encode(&[]),
+                ].concat(),
+            },
+        ).await?;
 
         println!("{:?}", res);
 
