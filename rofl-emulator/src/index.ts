@@ -1,6 +1,6 @@
 // Emulate ROFL because of issues with running vanilla ROFL
 import { GAME_ABI } from './game_abi';
-import { gmapMain } from './gmap';
+import { gmapMain, getDistanceBwLocationSeeds } from './gmap';
 import { signMain } from './sign';
 
 import { ethers, JsonRpcProvider } from "ethers";
@@ -50,17 +50,37 @@ const mainLoop = async () => {
             break;
         }
         case OP_CALC_POOL_PARTITION: {
-            // console.log(`[INFO] Processing CALC_POOL_PARTITION for Game ID: ${offchainTx.gameId}`)
+            console.log(`[INFO] Processing CALC_POOL_PARTITION for Game ID: ${offchainTx.gameId}`)
+            console.log(offchainTx.args)
 
-            // const locationSeed = offchainTx.args[0];
-            // const numUsers = parseInt(offchainTx.args[1], 16);
+            const locationSeed = offchainTx.args[0];
+            const numUsers = parseInt(offchainTx.args[1], 16);
 
-            // const userWeights = [];
+            const userWeights = [];
+            let poolAmount = 0;
+            for (let i = 0; i < numUsers; i++) {
+                const userGuess = offchainTx.args[2].slice(i * 64, (i + 1) * 64);
+                const userAmount = parseInt(offchainTx.args[3].slice(i * 64, (i + 1) * 64), 16);
+                const distance = getDistanceBwLocationSeeds(locationSeed, userGuess);
+                const weight = userAmount / distance;
+                userWeights.push(weight);
+                poolAmount += userAmount;
+            }
 
-            // for (let i = 0; i < numUsers; i++) {
-            //     const userGuess = offchainTx.args[2].slice(i * 32, (i + 1) * 32);
-            //     const userAmount = parseInt(offchainTx.args[3].slice(i * 32, (i + 1) * 32), 16);
-            // }
+            const poolPartition = [];
+            for (let i = 0; i < numUsers; i++) {
+                const userPartition = Math.floor(poolAmount * userWeights[i]);
+                const userPartitionHex = BigInt(userPartition).toString(16).padStart(64, '0');
+                poolPartition.push(userPartition);
+            }
+
+            console.log(poolPartition);
+
+            const tx = await contract.sendResultFromOffchain(offchainTx.id, poolPartition);
+            const receipt = await tx.wait();
+            console.log(receipt);
+
+            break;
         }
         default: {
             console.log(`[ERROR] Unknown operation: ${offchainTx.op}`)
