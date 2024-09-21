@@ -53,11 +53,6 @@ contract MessageBox {
 		txIdStart++;
 	}
 
-	constructor(string memory in_message) {
-		_message = in_message;
-		author = msg.sender;		
-	}
-
     function setMessage(string calldata in_message) external {
         _message = in_message;
         author = msg.sender;
