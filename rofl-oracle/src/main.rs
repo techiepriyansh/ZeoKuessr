@@ -203,6 +203,99 @@ impl OracleApp {
         // Submit the transaction to generate the random location seed on chain.
         let result = env.client().sign_and_submit_tx(env.signer(), tx).await?;
 
+        let data = ethabi::encode(&[
+            ethabi::Token::Uint(game_id.into()), // gameId as uint256
+            ethabi::Token::Bytes(location_seed), // locationSeed as bytes
+        ]);
+    
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: CONTRACT_ADDRESS.parse().unwrap(),
+                value: 0.into(),
+                data: [
+                    ethabi::short_signature("getRandGeoLocation", &[
+                        ethabi::ParamType::Uint(256),
+                        ethabi::ParamType::Bytes,
+                    ])
+                    .to_vec(),
+                    data,
+                ]
+                .concat(),
+            },
+        );
+        tx.set_fee_gas(200_000);
+    
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        let data = ethabi::encode(&[
+            ethabi::Token::Uint(game_id.into()),
+            ethabi::Token::Bytes(location_seed),
+            ethabi::Token::Uint(num_users.into()),
+            ethabi::Token::Array(user_guesses.into_iter().map(|g| ethabi::Token::FixedBytes(g.to_vec())).collect()),
+            ethabi::Token::Array(user_amounts.into_iter().map(|a| ethabi::Token::Uint(a.into())).collect()),
+        ]);
+    
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: CONTRACT_ADDRESS.parse().unwrap(),
+                value: 0.into(),
+                data: [
+                    ethabi::short_signature("calcPoolPartition", &[
+                        ethabi::ParamType::Uint(256),
+                        ethabi::ParamType::Bytes,
+                        ethabi::ParamType::Uint(256),
+                        ethabi::ParamType::Array(Box::new(ethabi::ParamType::FixedBytes(32))),
+                        ethabi::ParamType::Array(Box::new(ethabi::ParamType::Uint(256))),
+                    ])
+                    .to_vec(),
+                    data,
+                ]
+                .concat(),
+            },
+        );
+        tx.set_fee_gas(200_000);
+    
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        let data = ethabi::encode(&[
+            ethabi::Token::Uint(game_id.into()), // gameId as uint256
+            ethabi::Token::Bytes(location_seed.clone()), // locationSeed as bytes
+        ]);
+    
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: CONTRACT_ADDRESS.parse().unwrap(),
+                value: 0.into(),
+                data: [
+                    ethabi::short_signature("startGame", &[
+                        ethabi::ParamType::Uint(256),
+                    ])
+                    .to_vec(),
+                    data,
+                ]
+                .concat(),
+            },
+        );
+        tx.set_fee_gas(200_000);
+    
+        self.get_rand_geo_location(env, game_id, location_seed).await?;
+    
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: CONTRACT_ADDRESS.parse().unwrap(),
+                value: 0.into(),
+                data: ethabi::short_signature("newGame", &[]).to_vec(),
+            },
+        );
+        tx.set_fee_gas(200_000);
+    
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
         // Decode and handle the result (if applicable)
 
         Ok(())
