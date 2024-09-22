@@ -189,6 +189,22 @@ impl OracleApp {
         
         println!("PUSH 3");
 
+        // Prepare the oracle contract call for genRandLocationSeed.
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: CONTRACT_ADDRESS.parse().unwrap(), // Replace with the contract address
+                value: 0.into(),
+                data: ethabi::short_signature("genRandLocationSeed", &[]).to_vec(), // No parameters for this function
+            },
+        );
+        tx.set_fee_gas(200_000); // Set appropriate gas fees
+
+        // Submit the transaction to generate the random location seed on chain.
+        let result = env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        // Decode and handle the result (if applicable)
+
         Ok(())
     }
 }
