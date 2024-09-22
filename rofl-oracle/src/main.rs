@@ -296,6 +296,32 @@ impl OracleApp {
         tx.set_fee_gas(200_000);
     
         env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
+        let data = ethabi::encode(&[
+            ethabi::Token::Uint(game_id.into()), // gameId as uint256
+            ethabi::Token::FixedBytes(user_guess.to_vec()), // userGuess as bytes32
+        ]);
+    
+        let mut tx = self.new_transaction(
+            "evm.Call",
+            module_evm::types::Call {
+                address: CONTRACT_ADDRESS.parse().unwrap(),
+                value: value.into(), // user guess includes an Ether amount
+                data: [
+                    ethabi::short_signature("guess", &[
+                        ethabi::ParamType::Uint(256),
+                        ethabi::ParamType::FixedBytes(32),
+                    ])
+                    .to_vec(),
+                    data,
+                ]
+                .concat(),
+            },
+        );
+        tx.set_fee_gas(200_000);
+    
+        env.client().sign_and_submit_tx(env.signer(), tx).await?;
+
         // Decode and handle the result (if applicable)
 
         Ok(())
