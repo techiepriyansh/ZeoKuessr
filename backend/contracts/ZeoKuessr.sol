@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 
+address constant ROFL_EMULATOR = 0x2d774148fD9Bf280e09BA039ACFaD14a235B66F5;
+
 uint256 constant OP_GET_GEO_LOCATION_IMAGE = 1; // getGeoLocationImage(locationSeed bytes)
 uint256 constant OP_CALC_POOL_PARTITION = 2; // calcPoolPartition(gameId uint256, locationSeed bytes, numUser uint256, userGuesses bytes32[], userAmounts uint256[])
 
@@ -54,7 +56,10 @@ contract ZeoKuessr {
     }
 
     function getFirstPendingOffchainTx() external view returns (OffchainTx memory) {
-        // TODO: access restricted to the ROFL
+        if (msg.sender != ROFL_EMULATOR) {
+            revert("access restricted to the ROFL");
+        }
+
         if (txIdStart == txIdEnd) {
             return OffchainTx(0, 0, 0, new bytes[](0));
         }
@@ -71,7 +76,10 @@ contract ZeoKuessr {
     }
 
     function sendResultFromOffchain(uint256 txId, bytes[] memory result) external {
-        // TODO: access restricted to the ROFL
+        if (msg.sender != ROFL_EMULATOR) {
+            revert("access restricted to the ROFL");
+        }
+
         require(txId == txIdStart, "txId does not match the first pending tx");
         OffchainTx memory offchainTx = offchainTxs[txId];
         if (offchainTx.op == OP_GET_GEO_LOCATION_IMAGE) {
@@ -109,8 +117,6 @@ contract ZeoKuessr {
     }
 
     function startGame(uint256 gameId) external {
-        // access restricted to one of the players
-        // update the state of the game using gameId
         bytes memory locationSeed = genRandLocationSeed();
         gameStates[gameId].locationSeed = locationSeed;
         getRandGeoLocation(gameId, locationSeed);
@@ -134,8 +140,6 @@ contract ZeoKuessr {
     }
 
     function joinGame(uint256 gameId) external {
-        // access restricted to one of the players
-        // update the state of the game using gameId
         gameStates[gameId].userAddresses.push(msg.sender);
         gameStates[gameId].userGuesses.push("");
         gameStates[gameId].userAmounts.push(0);
@@ -169,16 +173,4 @@ contract ZeoKuessr {
         gameStates[gameId].isResolved = false;
         emit GameEnded(gameId);
     }
-
-    // function setMessage(string calldata in_message) external {
-    //     _message = in_message;
-    //     author = msg.sender;
-    // }
-
-    // function message() external view returns (string memory) {
-    //   if (msg.sender!=author) {
-    //     revert("not allowed");
-    //   }
-    //   return _message;
-    // }
 }
